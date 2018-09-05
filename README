@@ -1,0 +1,165 @@
+yoavhalevi
+ronenmor
+
+################################
+#  Program Files Description:  #
+################################
+
+This program is a compiler of simplified java code. the program gets as argument a .sjavac file containing
+simplified java code and the program checks if the code is legal. the program returns 0 if the code is
+legal, 1 if there are any syntax errors and 2 in case of IO error. for IO errors the program also prints an
+ informative message describing what cause the error.
+
+################################
+#           Design:            #
+################################
+
+we have created the following packages:
+# exceptions - bundles all the exception classes of the program.
+# oop.ex6.features - a package for the features we support in the compiler.
+# oop.ex6.main - a package for the main classes - the main class and the processing classes.
+
+The design of the exception classes and hierarchy is explained later in the 'Answers to Questions' part.
+
+As explained above, the features package contains the classes that represents supported features of our
+compiler. the classes are:
+    @ ConditionalBlock - represents an if or a while scope.
+    @ Method - represents a method.
+    @ Variable - represents a variable.
+    @ Program - represents a Sjava program.
+    @ Scope - represents a scope of the program.
+
+Besides of the Sjavac class that we had to implement in the main package, we have added the following
+classes:
+    @ Patterns - a class that organizes all the patterns and regex string that were created to process the
+    sjavac code. we have created a different pattern for each legit code line.
+    @ Processor - This class is the compiler's brain. the Sjavac main method creates a new Processor object
+     upon receiving a sjavac file. and for each row of the sjavac file we summon the processor's compile()
+     method. the compile method matches each row of the code with each one of the patterns from Pattern,
+     once a matched pattern was found - we then treat the specific case accordingly. for example lets say a
+      declartion of variable has occurred 'int a;', the pattern checks for syntax errors in an int
+      declaration line and then a method is being called to check if that variable is available and if so
+      it creates a new Variable object by the name of 'a' and type int.
+
+We have created a different pattern for each legit code line because of two main reasons. first we found
+this way easier to build the relevant regex strings, instead of complicating ourselves with big strings
+with a lot of 'or' operators in the string. Second, each legit code line need to be treated differently,
+for instance if we assign and declare an int and assign a string to it 'int a="string"' we have to check
+that the assigned value is of the same type of the variable declared, our patterns wont match any code line
+ that is like this.
+ Moreover, we found that this enables us more modularity - we can easily turn on\off a pattern if we have a
+  different requirement to support in the compiler.
+Note that after building the patterns we decided that the methods that treat each line can be more
+generic, and not create a method for each kind of line, otherwise we had to create loads of methods, but we
+ kept the same patterns and didn't change them to enable the modularity we talked about.
+
+
+Thinking Process
+----------------
+
+To come up with this design we had to think firstly about what we are trying to build here - the answer was
+ a compiler. then we asked ourselves what does a compiler do? - giving meaning to specific strings. we
+ elaborated that concept to the features the compiler support, such as creating and assigning variables
+ etc, and to the actual part of the compilation, that we implemented through the Processor class.
+the creation of the features is no different than the classes we had to implement so far in this course,
+some have hierarchy and some not. for example we created the scope parent class for all the scope type
+features (is-a relationship) and we created the Method and ConditionalBlock classes that inherit from Scope.
+This time it was difficult to think how to handle the processing itself - we created the Processor class in
+ order to do so, and we created the patterns class to support it. its necessary to point out that the
+ main reason to create the patterns class was to organize all the patterns for the Processor class. we
+ havent learned how to implement such 'organizers' classes nor we have found a formal (or even unformal)
+ way to do it on the web, but we found that helpful and makes are code easier to read and understand.
+
+
+the design alternative we thought of was create all the processing part in the main class, which we ruled
+out because we found it too confusing for a user to receive such a big main method. we also thought about
+creating one big Processor method that contains all of the features in it, and not in different classes.
+all in all while thinking about all the design principles we have learned we decided its better to divide
+our program into small independent units to allow modularity and easy understanding of the code. plus we
+allow extensibility in our design, if we wish to implement more features we can do that easily. we will
+describe two cases of extending our code in order to support two more features.
+
+Differences between the final design and the uml
+------------------------------------------------
+# changed the exception hierarchy - we misunderstood their meaning at the beginning and created hierarchy
+for code 1 error, when actually consists only of one kind of error which is syntax error. and therefore we
+add different kind of error 2 exception to provide informative messages for when an error occurs.
+# created the program class to represent the user program as it reflects from the .sjavac file.
+# created the Patterns class to organize all the patterns and regex strings.
+
+
+################################
+#    Implementation Issues:    #
+################################
+-
+
+################################
+#     Answers to Questions:    #
+################################
+
+Exceptions Handling
+--------------------
+
+We have created two levels of exceptions, corresponding to the code errors given in the exercise:
+
+@ code error 1 - illegal code: since this type of error code should be thrown when encountering a syntax
+error, this code is handled by a single exception - SyntaxException.
+
+@ code error 2 - IO error: to handle these types of errors we have created a parent class, IOError, and few
+ sub-classes that each defines a different type of exception that cause the error - for example
+ 'ExoectedBooleanException', this exception is being thrown whenever a conditional statement was a given a
+ variable that isn't defined as boolean.
+
+we chose this way to handle the errors in our implementation because of the following reasons:
+1. we found this hierarchy the most logical way to divide the errors. moreover -  the parent class IOError
+ also provides us more functionality and we use it to print the relevant error code and store a message
+ using the inherited constructor of IOException.
+2. extensibility = its easy to add new type of errors this way.
+
+
+Regex examples
+--------------
+we will now describe two main regular exceptions we created in the program.
+
+    @ finalIntDeclarationRegex = "\\s*final\\s+int\\s+"+nameRegex+"\\s*=\\s*"+intRegex+semicolonRegex;
+      this regex checks for a final int declaration, we have the same regex for each type of variable
+      supported by the program.
+      at the beginning we allow any kind of space, and it doesnt matter how much.
+      then we look for the 'final' word declaration, and allow 1 or more spaces after
+      then we look for the type decalaration 'int' and again allow 1 or more spaces after.
+      then we looke for a valid name (saved as another regex string), any space/s and the '=' sign
+      then we allow any space/s and look for a legit int number (saved as another regex string) and to
+      complete the code line we look for the semicolon suffix, which is also saved as another regex string.
+
+    @ multiParamMethodRegex = "void\\s+"+methodNameRegex+"\\s*[(]\\s*"+variableDeclaration+"(,(\\s)*"+
+                                variableDeclaration+")*\\s*[)]\\s*[{]\\s*";
+      this regex checks for a legit method declaration with one or more parameters.
+      at the beginning we look for the 'void' method type, we then allow 1 or more spaces and look for a
+      legit method name (saved as another regex string), then we allow any space/s, an openning of brackets
+      and after any space/s looking for a variable declaration in the format of 'type parameter' (which is
+      also saved as another regex string), then we allow any reappearance of a variable declaration divided
+      a comma for the last variable delaration (that allows any number of parameters to be defined for that
+       method) then we close the brackets and end the line with the openning of curly brackets that define
+       the scope of the method.
+
+
+Supporting more features
+------------------------
+Different methods' types (such ans int foo()) - in order support this we need to do the following changes:
+1. update the method regexes and create the relevant patterns.
+2. add a type attribute to the Method class.
+3. create a getter method for the type attribute.
+4. add a return regex that returns the relevant type.
+5. we have to extend the returnstatement method to check if there's a return value in the return line and if
+there's value, check that it is indeed of the same return type of the created method.
+6. we could throw an existing exception when a wrong value is returned.
+
+
+Standard java methods - if we wish to support java's standard method we would have to do the following changes
+ to our code:
+1. the Program class has an attribute closedMethods - containing all the methods created successfully in
+the given code. for each one of java's standard methods we wish to support we need to add it manually to
+the closedMethod arraylist, that way our compiler would know it is a usable method.
+2. we would need to add the relevant regex string and pattern that allow the syntax of the standard method.
+3. add an if condition to the compile() method in Processor that handles the case of a line with a standard
+ method. if the condition is met we can use the same method we use now for a method call.
