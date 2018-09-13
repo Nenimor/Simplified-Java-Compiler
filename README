@@ -1,9 +1,15 @@
+Simplified-Java compiler, implemented in Java (OOP course)
+
+Simplified Java supports a limited set of Java features (such as: variable declaration, if/while blocks, methods declaration and calls). On this project, I created an S-Java compiler which receives an S-Java source file, and outputs a single digit which indicates if the code is legal, has syntax error or IO error.
+High-level of the project
+The algorithm runs over the whole code, checking each line separately. First, the code line is checked for syntax errors by Regex, then split into main components accordingly (like variable name, variable type, method’s arguments, etc), and checked for IO legality (like variable name and assigned type, method calls, etc). The program contains several classes, and the process documents each variable, method and conditional scope by creating an instance of the relevant class for future syntax and IO checks.
+An Exception package was created seperatly, allowing the compiler to handle errors and supply an informative message. A UML file was created as basic design.
 
 ################################
 #  Program Files Description:  #
 ################################
 
-This program is a compiler of simplified java code. the program gets as argument a .sjavac file containing
+This program is a compiler of simplified java code. the program gets as argument an .sjavac file containing
 simplified java code and the program checks if the code is legal. the program returns 0 if the code is
 legal, 1 if there are any syntax errors and 2 in case of IO error. for IO errors the program also prints an
  informative message describing what cause the error.
